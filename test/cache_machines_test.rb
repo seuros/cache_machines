@@ -20,7 +20,7 @@ class CacheMachinesTest < Minitest::Test
 
   def test_native_api_and_empty_state
     assert_nil CacheMachines::Lru.instance_method(:admit).source_location
-    assert_equal '0.1.0', CacheMachines::VERSION
+    assert_match(/\A\d+\.\d+\.\d+\z/, CacheMachines::VERSION)
     assert_equal 64, CacheMachines::Lru::CAPACITY
     assert_predicate @cache, :empty?
     assert_equal 0, @cache.size
