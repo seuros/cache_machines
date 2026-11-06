@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/seuros/cache_machines/compare/cache_machines/v0.1.2...cache_machines/v0.1.3) (2026-11-06)
+
+
+### Bug Fixes
+
+* keep test sources out of the packaged gem and crate ([28635a4](https://github.com/seuros/cache_machines/commit/28635a4df2b2313914957f8cf8b068934bb35f7d))
+
 ## [0.1.2](https://github.com/seuros/cache_machines/compare/cache_machines/v0.1.1...cache_machines/v0.1.2) (2026-11-06)
 
 
