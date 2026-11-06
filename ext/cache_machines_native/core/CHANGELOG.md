@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/seuros/cache_machines/compare/cache-machines-v0.2.1...cache-machines-v0.2.2) (2026-11-06)
+
+
+### Bug Fixes
+
+* crates.io keywords and categories for the core ([03e3752](https://github.com/seuros/cache_machines/commit/03e375232563df5cf56b4bbe8435540048b3f2c7))
+
 ## [0.2.1](https://github.com/seuros/cache_machines/compare/cache-machines-v0.2.0...cache-machines-v0.2.1) (2026-11-06)
 
 
