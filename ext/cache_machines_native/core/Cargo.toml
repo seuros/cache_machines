@@ -7,5 +7,7 @@ license.workspace = true
 description = "Bounded LRU policy with caller-measured frequency admission"
 readme = "README.md"
 exclude = ["src/**/tests.rs", "tests/"]
+keywords = ["cache", "lru", "admission", "eviction", "no-std"]
+categories = ["no-std", "algorithms", "caching"]
 [lints]
 workspace = true
