@@ -1,0 +1,17 @@
+module CacheMachines
+  VERSION: String
+
+  class Lru
+    CAPACITY: Integer
+
+    def self.new: () -> Lru
+    def admit: (Integer key, candidate_frequency: Integer, victim_frequency: Integer) -> [Symbol, Integer?]
+    def access: (Integer key) -> bool
+    def remove: (Integer key) -> bool
+    def clear: () -> nil
+    def keys: () -> Array[Integer]
+    def size: () -> Integer
+    def empty?: () -> bool
+    def victim: () -> Integer?
+  end
+end
