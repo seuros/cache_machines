@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.0](https://github.com/seuros/cache_machines/compare/cache_machines/v0.2.0...cache_machines/v0.3.0) (2026-11-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* adopt matryona-machines 0.2 (symbols! tables, frozen-first)
+
+### Features
+
+* adopt matryona-machines 0.2 (symbols! tables, frozen-first) ([7556afb](https://github.com/seuros/cache_machines/commit/7556afb823a70c16417c22390ceb5b955990ebfd))
+
 ## [0.2.0](https://github.com/seuros/cache_machines/compare/cache_machines/v0.1.4...cache_machines/v0.2.0) (2026-11-14)
 
 
