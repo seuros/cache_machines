@@ -1,5 +1,6 @@
 //! Randomized comparison against a plain reference model.
 use super::*;
+use matryona_machines::testing::XorShift64;
 
 const CAPACITY: usize = 4;
 
@@ -41,24 +42,9 @@ impl Model {
     }
 }
 
-struct Random(u64);
-
-impl Random {
-    fn next(&mut self) -> u64 {
-        self.0 ^= self.0 << 13;
-        self.0 ^= self.0 >> 7;
-        self.0 ^= self.0 << 17;
-        self.0
-    }
-
-    fn below(&mut self, bound: u64) -> u64 {
-        self.next() % bound
-    }
-}
-
 /// Honoured changes, honoured answers that changed nothing, refusals.
 fn run(seed: u64) -> [usize; 3] {
-    let mut random = Random(seed);
+    let mut random = XorShift64::new(seed);
     let mut cache = Lru::<u64, CAPACITY>::new();
     let mut model = Model(Vec::new());
     let mut tally = [0; 3];

@@ -42,4 +42,12 @@ class BindingTest < Minitest::Test
     assert_instance_of Evicted, answer
     refute_equal forged, answer
   end
+
+  def test_the_extension_alone_is_a_name_error
+    lib = File.expand_path('../lib', __dir__)
+    script = 'begin; require "cache_machines_native/cache_machines_native"; ' \
+             'rescue NameError => e; print e.class; end'
+    output = IO.popen([RbConfig.ruby, '-I', lib, '-e', script], err: %i[child out], &:read)
+    assert_equal 'NameError', output
+  end
 end

@@ -170,6 +170,13 @@ class CacheMachinesTest < Minitest::Test
     assert_equal 1, @cache.size
   end
 
+  def test_frozen_is_checked_before_the_arguments
+    @cache.freeze
+    assert_raises(FrozenError) { @cache.admit(-1, 0.5, nil) }
+    assert_raises(FrozenError) { @cache.access('1') }
+    assert_raises(FrozenError) { @cache.remove(2**64) }
+  end
+
   def test_gc_compaction_and_instance_independence
     admit(MAX)
     100.times { CacheMachines::Lru.new }
