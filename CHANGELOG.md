@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/seuros/cache_machines/compare/cache_machines/v0.1.4...cache_machines/v0.2.0) (2026-11-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* answer Refusal/Access/Removal, admit never loses an eviction, Evicted validated, sealed and resolved at load
+
+### Features
+
+* answer Refusal/Access/Removal, admit never loses an eviction, Evicted validated, sealed and resolved at load ([adac5a9](https://github.com/seuros/cache_machines/commit/adac5a9939b9e2468e7a9a99aed1db283fe96f94))
+
 ## [0.1.4](https://github.com/seuros/cache_machines/compare/cache_machines/v0.1.3...cache_machines/v0.1.4) (2026-11-06)
 
 
