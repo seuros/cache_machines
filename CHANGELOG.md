@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/seuros/cache_machines/compare/cache_machines/v0.3.1...cache_machines/v0.3.2) (2026-11-14)
+
+
+### Bug Fixes
+
+* **deps:** require matryona-machines &gt;= 0.4 ([9ca18ea](https://github.com/seuros/cache_machines/commit/9ca18eacb4125b68fc3acbbd55630146fbb8ddef))
+
 ## [0.3.1](https://github.com/seuros/cache_machines/compare/cache_machines/v0.3.0...cache_machines/v0.3.1) (2026-11-14)
 
 
