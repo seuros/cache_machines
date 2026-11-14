@@ -1,17 +1,42 @@
 module CacheMachines
   VERSION: String
 
+  # Refusals of `admit`: the key was not admitted and nothing changed. Every
+  # reason has its own symbol; there is no catch-all.
+  type refusal = :outranked | :zero_capacity
+
+  # The key `admit` evicted. `key` is an Integer in 0..2**64-1: RangeError
+  # otherwise (TypeError for a non-Integer), whether the cache built it or you did.
+  # Sealed: subclassing raises TypeError and `allocate` is undefined.
+  class Evicted < Data
+    attr_reader key: Integer
+    def self.new: (Integer key) -> Evicted
+                | (key: Integer) -> Evicted
+  end
+
   class Lru
+    # The capacity compiled into the gem: the same as `#capacity`.
     CAPACITY: Integer
 
     def self.new: () -> Lru
-    def admit: (Integer key, candidate_frequency: Integer, victim_frequency: Integer) -> [Symbol, Integer?]
-    def access: (Integer key) -> bool
-    def remove: (Integer key) -> bool
+    # Positional, like `Lru::admit(key, candidate_frequency, victim_frequency)`.
+    # Honoured: :hit (promoted), :inserted, Evicted. Refused: :outranked (full,
+    # and the candidate's frequency does not exceed the victim's), :zero_capacity.
+    # RuntimeError, not applied, when building the answer changed the cache;
+    # FrozenError, not applied, when it froze the cache.
+    def admit: (Integer key, Integer candidate_frequency, Integer victim_frequency) -> (:hit | :inserted | Evicted | :outranked | :zero_capacity)
+    # :hit promotes the key; :miss inserts nothing and changes nothing. Never refuses.
+    def access: (Integer key) -> (:hit | :miss)
+    # :removed, or :absent when the key was not retained (a repeat: nothing
+    # changes). Never refuses.
+    def remove: (Integer key) -> (:removed | :absent)
     def clear: () -> nil
+    # A fresh Array, most recent first.
     def keys: () -> Array[Integer]
     def size: () -> Integer
     def empty?: () -> bool
+    # The key `admit` would evict; nil until the cache is full.
     def victim: () -> Integer?
+    def capacity: () -> Integer
   end
 end
