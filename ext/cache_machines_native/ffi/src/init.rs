@@ -23,5 +23,7 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     class.define_method("size", method!(Wrapper::len, 0))?;
     class.define_method("empty?", method!(Wrapper::is_empty, 0))?;
     class.define_method("victim", method!(Wrapper::victim, 0))?;
-    class.define_method("capacity", method!(Wrapper::capacity, 0))
+    class.define_method("capacity", method!(Wrapper::capacity, 0))?;
+    // `new` answers a Wrapper: fix its class now, so building one runs no Ruby.
+    Class::pin_wrapped::<Wrapper>(ruby, class).map(drop)
 }
