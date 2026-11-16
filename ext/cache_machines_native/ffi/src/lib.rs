@@ -57,7 +57,7 @@ fn checked_evicted(key: Value) -> Result<u64, Error> {
 struct Wrapper(RefCell<Lru<u64, CAPACITY>>);
 
 impl Wrapper {
-    fn new() -> Self {
+    const fn new() -> Self {
         Self(RefCell::new(Lru::new()))
     }
 

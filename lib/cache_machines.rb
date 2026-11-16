@@ -26,4 +26,8 @@ module CacheMachines
   # bare `allocate` builds a value that never ran it.
   Evicted.singleton_class.undef_method(:allocate)
   Evicted.define_singleton_method(:inherited) { |_| raise TypeError, "#{Evicted} cannot be subclassed" }
+
+  # Lru wraps native state and has no allocator: a subclass's `new` would
+  # build an Lru anyway, so subclassing raises too.
+  Lru.define_singleton_method(:inherited) { |_| raise TypeError, "#{Lru} cannot be subclassed" }
 end

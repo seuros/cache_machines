@@ -1,7 +1,7 @@
 extern crate std;
 
 use super::*;
-use matryona_machines::testing::{refuses, unchanged};
+use matryona_machines::testing::{describes, refuses, unchanged};
 use std::vec::Vec;
 
 mod model;
@@ -101,12 +101,36 @@ fn the_default_key_is_an_ordinary_key() {
 
 #[test]
 fn refusals_describe_themselves() {
-    use std::string::ToString;
-    let all = [Refusal::Outranked, Refusal::ZeroCapacity];
-    for (index, refusal) in all.iter().enumerate() {
-        let text = refusal.to_string();
-        assert_ne!(text, "");
-        assert!(all[..index].iter().all(|other| other.to_string() != text));
-        let _: &dyn core::error::Error = refusal;
-    }
+    describes(&[
+        (
+            Refusal::Outranked,
+            "the candidate does not outrank the victim",
+        ),
+        (Refusal::ZeroCapacity, "the cache has no capacity"),
+    ]);
+}
+
+/// A key with no `Default`: the policy never needs a placeholder key.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Shard(u8);
+
+/// Built at compile time.
+const EMPTY: Lru<Shard, 2> = Lru::new();
+
+#[test]
+fn an_empty_cache_is_a_constant_and_keys_need_no_default() {
+    let mut cache = EMPTY;
+    assert!(cache.is_empty());
+    assert_eq!(cache.admit(Shard(1), 0, 0), Ok(Admission::Inserted));
+    assert_eq!(cache.admit(Shard(2), 0, 0), Ok(Admission::Inserted));
+    assert_eq!(
+        cache.admit(Shard(3), 1, 0),
+        Ok(Admission::Evicted(Shard(1)))
+    );
+    assert_eq!(cache.remove(Shard(3)), Removal::Removed);
+    let mut twin = EMPTY;
+    assert_eq!(twin.admit(Shard(2), 0, 0), Ok(Admission::Inserted));
+    assert_eq!(cache, twin);
+    cache.clear();
+    assert_eq!(cache, EMPTY);
 }

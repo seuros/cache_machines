@@ -14,6 +14,7 @@ module CacheMachines
                 | (key: Integer) -> Evicted
   end
 
+  # Sealed: no allocator, and subclassing raises TypeError.
   class Lru
     # The capacity compiled into the gem: the same as `#capacity`.
     CAPACITY: Integer
@@ -39,4 +40,7 @@ module CacheMachines
     def victim: () -> Integer?
     def capacity: () -> Integer
   end
+
+  # Private native hook `Evicted#initialize` validates its key through.
+  private def self.__evicted: (Integer key) -> Integer
 end

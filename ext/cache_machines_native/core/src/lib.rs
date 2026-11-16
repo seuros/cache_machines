@@ -1,5 +1,6 @@
 #![no_std]
 #![doc = include_str!("../README.md")]
+#![cfg_attr(not(test), deny(clippy::indexing_slicing))]
 
 use core::fmt;
 
@@ -56,27 +57,27 @@ impl fmt::Display for Refusal {
 
 impl core::error::Error for Refusal {}
 
-/// LRU keys in most-recent-first order. Slots at and past `len` hold
-/// `K::default()`, so two caches retaining the same keys in the same order
-/// compare equal.
+/// LRU keys in most-recent-first order. Slots before `len` hold `Some`,
+/// slots at and past it `None`, so two caches retaining the same keys in the
+/// same order compare equal and no placeholder key is needed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Lru<K, const N: usize> {
-    keys: [K; N],
+    keys: [Option<K>; N],
     len: usize,
 }
 
-impl<K: Copy + Eq + Default, const N: usize> Default for Lru<K, N> {
+impl<K: Copy + Eq, const N: usize> Default for Lru<K, N> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<K: Copy + Eq + Default, const N: usize> Lru<K, N> {
+impl<K: Copy + Eq, const N: usize> Lru<K, N> {
     /// Start empty.
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
-            keys: [K::default(); N],
+            keys: [None; N],
             len: 0,
         }
     }
@@ -101,39 +102,60 @@ impl<K: Copy + Eq + Default, const N: usize> Lru<K, N> {
 
     /// Retained keys in most-recent-first order.
     pub fn keys(&self) -> impl Iterator<Item = K> + '_ {
-        self.keys[..self.len].iter().copied()
+        self.live().iter().flatten().copied()
     }
 
     /// Forget every key.
     pub fn clear(&mut self) {
-        self.keys.fill(K::default());
+        self.keys.fill(None);
         self.len = 0;
     }
 
-    fn index(&self, key: K) -> Option<usize> {
-        self.keys[..self.len].iter().position(|value| *value == key)
+    /// The retained slots, `keys[..len]`. `len <= N` always holds (it only
+    /// grows while `len < N`); were it ever broken the live run reads as
+    /// empty, so every operation answers as for a key that is not retained.
+    fn live(&self) -> &[Option<K>] {
+        self.keys.get(..self.len).unwrap_or_default()
+    }
+
+    fn live_mut(&mut self) -> &mut [Option<K>] {
+        self.keys.get_mut(..self.len).unwrap_or_default()
+    }
+
+    /// The retained run up to and including `key`, so its last slot holds
+    /// `key`; `None` when `key` is not retained.
+    fn through(&mut self, key: K) -> Option<&mut [Option<K>]> {
+        let live = self.live_mut();
+        let index = live.iter().position(|value| *value == Some(key))?;
+        live.get_mut(..=index)
     }
 
     /// Remove a key without changing the relative order of the others.
     /// Removing a key that is not retained is an honoured repeat,
     /// [`Removal::Absent`], and changes nothing.
     pub fn remove(&mut self, key: K) -> Removal {
-        let Some(index) = self.index(key) else {
+        let live = self.live_mut();
+        let Some(index) = live.iter().position(|value| *value == Some(key)) else {
             return Removal::Absent;
         };
-        self.keys[index..self.len].rotate_left(1);
-        self.len -= 1;
-        self.keys[self.len] = K::default();
+        if let Some(tail) = live.get_mut(index..) {
+            tail.rotate_left(1);
+            if let Some(last) = tail.last_mut() {
+                *last = None;
+            }
+        }
+        // `index < len`, so `len >= 1`.
+        self.len = self.len.saturating_sub(1);
         Removal::Removed
     }
 
     /// Promote a hit to most recent; a miss answers [`Access::Miss`] and
     /// leaves the ordering unchanged.
     pub fn access(&mut self, key: K) -> Access {
-        let Some(index) = self.index(key) else {
+        let Some(head) = self.through(key) else {
             return Access::Miss;
         };
-        self.keys[..=index].rotate_right(1);
+        head.rotate_right(1);
         Access::Hit
     }
 
@@ -154,29 +176,37 @@ impl<K: Copy + Eq + Default, const N: usize> Lru<K, N> {
         if self.access(key) == Access::Hit {
             return Ok(Admission::Hit);
         }
-        let outcome = match self.victim() {
+        let (outcome, len) = match self.victim() {
             Some(_) if candidate_frequency <= victim_frequency => {
                 return Err(Refusal::Outranked);
             }
-            Some(victim) => Admission::Evicted(victim),
-            None if self.len < N => {
-                self.len += 1;
-                Admission::Inserted
-            }
+            Some(victim) => (Admission::Evicted(victim), self.len),
+            // `len < N <= usize::MAX`, so this cannot overflow.
+            None if self.len < N => (Admission::Inserted, self.len.saturating_add(1)),
             None => return Err(Refusal::ZeroCapacity),
         };
-        self.keys[..self.len].rotate_right(1);
-        self.keys[0] = key;
+        // `1 <= len <= N`: a victim exists only when the cache is full and
+        // nonempty, an insertion only below capacity.
+        let slots = self.keys.get_mut(..len).unwrap_or_default();
+        // Shift every retained key down one place, the last falling off (it
+        // is the evicted victim, or the empty slot just claimed). On an empty
+        // run the rotation is a no-op, so the arm below changes nothing.
+        slots.rotate_right(1);
+        let Some(first) = slots.first_mut() else {
+            debug_assert!(false, "an admission always has a slot below N");
+            return Err(Refusal::ZeroCapacity);
+        };
+        *first = Some(key);
+        self.len = len;
         Ok(outcome)
     }
 
     /// Current eviction candidate, when the cache is full and nonempty.
     #[must_use]
     pub const fn victim(&self) -> Option<K> {
-        if self.len == N {
-            self.keys.last().copied()
-        } else {
-            None
+        match self.keys.last() {
+            Some(slot) if self.len == N => *slot,
+            _ => None,
         }
     }
 }

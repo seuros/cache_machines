@@ -12,6 +12,7 @@ fn init(ruby: &Ruby) -> Result<(), Error> {
     CLASSES.set(ruby, Classes { evicted })?;
     module.define_singleton_method("__evicted", function!(checked_evicted, 1))?;
     let class = module.define_class("Lru", ruby.class_object())?;
+    class.undef_default_alloc_func();
     class.const_set("CAPACITY", CAPACITY)?;
     class.define_singleton_method("new", function!(Wrapper::new, 0))?;
     class.define_method("admit", method!(Wrapper::admit, 3))?;

@@ -28,9 +28,9 @@ updates. A zero-capacity cache refuses every insertion.
 - **Repeats.** `remove` of a key that is not retained is `Removal::Absent`: the
   effect already holds, provably, and nothing changes. `admit` or `access` of
   the most recent key is `Hit` and moves nothing.
-- **Keys.** `K: Copy + Eq + Default`. Free slots hold `K::default()`, so caches
-  retaining the same keys in the same order compare equal; the default key is
-  an ordinary key otherwise.
+- **Keys.** `K: Copy + Eq`, no `Default`: free slots hold no key, so caches
+  retaining the same keys in the same order compare equal, and `Lru::new` is a
+  `const fn` (an empty cache can be a `const` or a `static`).
 - **Exhaustive.** `Admission`, `Access`, `Removal` and `Refusal` carry no
   `#[non_exhaustive]`; a new variant is a breaking change.
 - **Scopes and restarts.** The policy issues no ids; keys are the caller's. A

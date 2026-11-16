@@ -119,31 +119,28 @@ class CacheMachinesTest < Minitest::Test
   def test_a_raise_while_building_the_answer_loses_nothing
     full_cache
     before = @cache.keys
-    Evicted.singleton_class.alias_method(:original_new, :new)
-    Evicted.define_singleton_method(:new) { |*| raise IOError, 'no memory' }
-    assert_raises(IOError) { admit(100, 1, 0) }
+    redefining(Evicted.singleton_class, new: proc { |*| raise IOError, 'no memory' }) do
+      assert_raises(IOError) { admit(100, 1, 0) }
+    end
     assert_equal before, @cache.keys
     cache = @cache
-    Evicted.define_singleton_method(:new) { |*args| cache.remove(5) && original_new(*args) }
-    assert_raises(RuntimeError) { admit(100, 1, 0) }
+    original = Evicted.method(:new)
+    redefining(Evicted.singleton_class, new: proc { |*args| cache.remove(5) && original.call(*args) }) do
+      assert_raises(RuntimeError) { admit(100, 1, 0) }
+    end
     assert_equal before - [5], @cache.keys, 'the re-entrant change stands, the outer call is not applied'
-  ensure
-    Evicted.singleton_class.alias_method(:new, :original_new)
-    Evicted.singleton_class.remove_method(:original_new)
   end
 
   def test_an_answer_that_freezes_the_cache_applies_nothing
     full_cache
     before = @cache.keys
     cache = @cache
-    Evicted.singleton_class.alias_method(:original_new, :new)
-    Evicted.define_singleton_method(:new) { |*args| cache.freeze && original_new(*args) }
-    assert_raises(FrozenError) { admit(100, 1, 0) }
+    original = Evicted.method(:new)
+    redefining(Evicted.singleton_class, new: proc { |*args| cache.freeze && original.call(*args) }) do
+      assert_raises(FrozenError) { admit(100, 1, 0) }
+    end
     assert_predicate @cache, :frozen?
     assert_equal before, @cache.keys
-  ensure
-    Evicted.singleton_class.alias_method(:new, :original_new)
-    Evicted.singleton_class.remove_method(:original_new)
   end
 
   def test_evicted_class_is_resolved_once_at_init
@@ -188,5 +185,29 @@ class CacheMachinesTest < Minitest::Test
     assert_predicate other, :empty?
     other.admit(0, 0, 0)
     assert_equal [MAX], @cache.keys
+  end
+
+  private
+
+  # Runs the block with each method of `klass` named in `bodies` replaced by
+  # its body, then restores the originals.
+  def redefining(klass, **bodies)
+    originals = bodies.to_h { |name, _| [name, klass.instance_method(name)] }
+    bodies.each { |name, body| replace_method(klass, name, body) }
+    yield
+  ensure
+    originals&.each { |name, method| replace_method(klass, name, (method if method.owner == klass)) }
+  end
+
+  # Defines `name` on `klass` as `body` (removes it when `body` is nil),
+  # removing the method `klass` itself holds first. Ruby warns about the
+  # redefinition, deliberate here, so warnings are off for the swap alone.
+  def replace_method(klass, name, body)
+    verbose = $VERBOSE
+    $VERBOSE = nil
+    klass.remove_method(name) if klass.method_defined?(name, false) || klass.private_method_defined?(name, false)
+    klass.define_method(name, body) if body
+  ensure
+    $VERBOSE = verbose
   end
 end

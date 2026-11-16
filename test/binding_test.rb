@@ -31,6 +31,12 @@ class BindingTest < Minitest::Test
     assert_operator forged_class, :<, Evicted
   end
 
+  def test_lru_is_sealed
+    assert_raises(TypeError) { CacheMachines::Lru.allocate }
+    error = assert_raises(TypeError) { Class.new(CacheMachines::Lru) }
+    assert_equal 'CacheMachines::Lru cannot be subclassed', error.message
+  end
+
   def test_a_forged_evicted_is_never_a_cache_answer
     forged = forged_class.new(key: 0)
     assert_equal(-1, forged.key)
