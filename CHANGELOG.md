@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/seuros/cache_machines/compare/cache_machines/v0.4.0...cache_machines/v0.4.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* fix wrapped classes at load so building a value runs no Ruby ([7d9ee47](https://github.com/seuros/cache_machines/commit/7d9ee47c4a37b5cc3081df9c4971f21c8211e217))
+
 ## [0.4.0](https://github.com/seuros/cache_machines/compare/cache_machines/v0.3.2...cache_machines/v0.4.0) (2026-11-16)
 
 
