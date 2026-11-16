@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.0](https://github.com/seuros/cache_machines/compare/cache-machines-v0.4.0...cache-machines-v0.5.0) (2026-11-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* seal CacheMachines::Lru and drop the Default bound on Lru keys
+
+### Features
+
+* seal CacheMachines::Lru and drop the Default bound on Lru keys ([078344c](https://github.com/seuros/cache_machines/commit/078344cbf653eb4891322caa936e9cbe3834f49b))
+
 ## [0.4.0](https://github.com/seuros/cache_machines/compare/cache-machines-v0.3.0...cache-machines-v0.4.0) (2026-11-14)
 
 
